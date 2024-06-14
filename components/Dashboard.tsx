@@ -1,5 +1,7 @@
 "use client"
-import Link from "next/link"
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import Link from "next/link";
 import {
   Bell,
   CircleUser,
@@ -7,19 +9,15 @@ import {
   Menu,
   Package2,
   Search,
-} from "lucide-react"
-import { Toaster } from "@/components/ui/sonner"
-import { Button } from "@/components/ui/button"
-
-
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-
+} from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,48 +25,59 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import CryptoChart from "@/components/ui/CryptoChart"
-import Modal from "@/components/ui/DrawerCoin"
-
-
-import React, { useState, useEffect } from "react"
-import axios from "axios"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import CryptoChart from "@/components/ui/CryptoChart";
+import Modal from "@/components/ui/DrawerCoin";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface DashboardProps {
   provider: any; // Define provider prop
   account: string | null; // Define account prop
 }
 
+interface Crypto {
+  id: string;
+  symbol: string;
+  name: string;
+}
+
 export function Dashboard() {
-  const [cryptos, setCryptos] = useState([]);
-  const [filteredCryptos, setFilteredCryptos] = useState([]);
+  const [cryptos, setCryptos] = useState<Crypto[]>([]);
+  const [filteredCryptos, setFilteredCryptos] = useState<Crypto[]>([]);
+
   const [selectedCrypto, setSelectedCrypto] = useState("bitcoin");
   const [timeRange, setTimeRange] = useState("30");
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPrice, setCurrentPrice] = useState(null);
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null); // Initialize as null or number
   const [livePriceAvailable, setLivePriceAvailable] = useState(false);
   const [fetchError, setFetchError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [historicalData, setHistoricalData] = useState([]);
+  const [historicalData, setHistoricalData] = useState<any[]>([]); // Adjust type according to your data structure
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchCryptos = async () => {
       try {
-        const response = await axios.get("https://api.coingecko.com/api/v3/coins/list");
-        const formattedCryptos = response.data.map(crypto => ({
+        const response = await axios.get(
+          "https://api.coingecko.com/api/v3/coins/list"
+        );
+        const formattedCryptos = response.data.map((crypto: any) => ({
           id: crypto.id,
           symbol: crypto.symbol,
           name: crypto.name,
         }));
         setCryptos(formattedCryptos);
         setFilteredCryptos(formattedCryptos); // Initialize filteredCryptos with all cryptos
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching cryptos:", error);
       }
     };
@@ -76,43 +85,46 @@ export function Dashboard() {
     fetchCryptos();
   }, []);
 
-
-
   const fetchCurrentPrice = async () => {
     try {
       const response = await axios.get(`/api/coingecko/simple/price`, {
         params: {
           ids: selectedCrypto,
-          vs_currencies: 'usd',
+          vs_currencies: "usd",
         },
       });
-      setCurrentPrice(response.data[selectedCrypto].usd);
-    } catch (error) {
+      setCurrentPrice(response.data[selectedCrypto]?.usd || null); // Handle null case
+    } catch (error: any) {
       console.error("Error fetching current price:", error);
       if (error.response && error.response.status === 429) {
-        alert("Too many requests. Kindly retry 1 minute."); // Show alert instead of Toaster
+        alert("Too many requests. Kindly retry in 1 minute."); // Show alert instead of Toaster
       } else {
-        alert("Error fetching current price. Please refrssh after 60 seconds"); // Show alert for other errors
+        alert("Error fetching current price. Please refresh after 60 seconds."); // Show alert for other errors
       }
     }
   };
 
-  const handleCryptoSelection = async (cryptoId) => {
+  const handleCryptoSelection = async (cryptoId: string) => {
     setSelectedCrypto(cryptoId);
     setIsLoading(true);
     try {
-      const response = await axios.get(`/api/coingecko/coins/${cryptoId}/market_chart`, {
-        params: {
-          vs_currency: "usd",
-          days: timeRange,
-        },
-      });
+      const response = await axios.get(
+        `/api/coingecko/coins/${cryptoId}/market_chart`,
+        {
+          params: {
+            vs_currency: "usd",
+            days: timeRange,
+          },
+        }
+      );
       setHistoricalData(response.data.prices);
       setFetchError(""); // Clear any previous error
       setIsLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error fetching historical data for ${cryptoId}:`, error);
-      setFetchError("Too many requests for the free API to handle. Please refresh in a minute. 🥺");
+      setFetchError(
+        "Too many requests for the free API to handle. Please refresh in a minute. 🥺"
+      );
       setIsLoading(false);
     }
   };
@@ -124,7 +136,7 @@ export function Dashboard() {
   }, [selectedCrypto]);
 
   useEffect(() => {
-    const filtered = cryptos.filter(crypto =>
+    const filtered = cryptos.filter((crypto) =>
       crypto.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredCryptos(filtered);
@@ -139,7 +151,11 @@ export function Dashboard() {
               <Package2 className="h-6 w-6" />
               <span className="">CryptoPulse</span>
             </Link>
-            <Button variant="outline" size="icon" className="ml-auto h-8 w-8">
+            <Button
+              variant="outline"
+              size="icon"
+              className="ml-auto h-8 w-8"
+            >
               <Bell className="h-4 w-4" />
               <span className="sr-only">Toggle notifications</span>
             </Button>
@@ -154,11 +170,13 @@ export function Dashboard() {
                 Dashboard
               </Link>
               <div className="border-b my-2"></div>
-              {filteredCryptos.map((crypto) => (
+              {filteredCryptos.map((crypto: Crypto) => (
                 <Link
                   key={crypto.id}
                   href="#"
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${selectedCrypto === crypto.id ? 'bg-muted text-primary' : ''}`}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${
+                    selectedCrypto === crypto.id ? "bg-muted text-primary" : ""
+                  }`}
                   onClick={() => handleCryptoSelection(crypto.id)}
                 >
                   {crypto.name}
@@ -201,7 +219,9 @@ export function Dashboard() {
                   <Link
                     key={crypto.id}
                     href="#"
-                    className={`mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground transition-all hover:text-primary ${selectedCrypto === crypto.id ? 'bg-muted text-primary' : ''}`}
+                    className={`mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground transition-all hover:text-primary ${
+                      selectedCrypto === crypto.id ? "bg-muted text-primary" : ""
+                    }`}
                     onClick={() => handleCryptoSelection(crypto.id)}
                   >
                     {crypto.name}
@@ -211,7 +231,6 @@ export function Dashboard() {
             </SheetContent>
           </Sheet>
           <div className="w-full flex-1 relative">
-          
             <form>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -238,15 +257,16 @@ export function Dashboard() {
               </div>
             </form>
           </div>
-          <Button variant="outline" onClick={() => setIsModalOpen(true)}>Coin Swap</Button>
+          <Button variant="outline" onClick={() => setIsModalOpen(true)}>
+            Coin Swap
+          </Button>
           <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
             <iframe
               src="https://coinmingle.vercel.app/"
-              style={{ width: '100%', height: '100%', border: 'none' }}
+              style={{ width: "100%", height: "100%", border: "none" }}
               title="Coin Swap"
             ></iframe>
           </Modal>
-         
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
@@ -268,26 +288,42 @@ export function Dashboard() {
           <div className="flex items-center gap-4 mb-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button>Time Range ({timeRange === "1" ? "1 Day" : timeRange === "7" ? "1 Week" : "1 Month"})</Button>
+                <Button>
+                  Time Range (
+                  {timeRange === "1"
+                    ? "1 Day"
+                    : timeRange === "7"
+                    ? "1 Week"
+                    : "1 Month"}
+                  )
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onSelect={() => setTimeRange("1")}>1 Day</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setTimeRange("7")}>1 Week</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setTimeRange("30")}>1 Month</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setTimeRange("1")}>
+                  1 Day
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setTimeRange("7")}>
+                  1 Week
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setTimeRange("30")}>
+                  1 Month
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
           <div className="flex items-center">
             <h1 className="text-lg font-semibold md:text-2xl capitalize">
               {selectedCrypto}
-              {currentPrice && (
+              {currentPrice !== null && (
                 <span className="ml-2 text-sm text-gray-500">
                   (${currentPrice.toFixed(2)})
                 </span>
               )}
             </h1>
             <Badge className="ml-4">
-              {livePriceAvailable ? "Live Prices Available" : "Live Prices Not Available"}
+              {livePriceAvailable
+                ? "Live Prices Available"
+                : "Live Prices Not Available"}
             </Badge>
           </div>
           <div
@@ -306,13 +342,16 @@ export function Dashboard() {
             ) : fetchError ? (
               <div className="text-red-500">{fetchError}</div>
             ) : (
-              <CryptoChart selectedCrypto={selectedCrypto} timeRange={timeRange} setLivePriceAvailable={setLivePriceAvailable} setCurrentPrice={setCurrentPrice} />
+              <CryptoChart
+                selectedCrypto={selectedCrypto}
+                timeRange={timeRange}
+                setLivePriceAvailable={setLivePriceAvailable}
+                setCurrentPrice={setCurrentPrice}
+              />
             )}
           </div>
-          
         </main>
-      
       </div>
     </div>
-  )
+  );
 }
