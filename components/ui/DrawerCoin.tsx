@@ -21,7 +21,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
         </button>
         <div className="w-full h-full overflow-hidden">
           <iframe
-            src="https://0x-nextjs-demo-18962petc-0x-eng.vercel.app/"
+            src="https://erc-20-token-swap-gamma.vercel.app/"
             style={{ width: '100%', height: '100%', border: 'none', overflow: 'hidden' }}
             title="Coin Swap"
           ></iframe>
