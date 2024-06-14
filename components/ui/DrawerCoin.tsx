@@ -1,6 +1,12 @@
-import React from "react";
+import React, { ReactNode } from "react";
 
-const Modal = ({ isOpen, onClose, children }) => {
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children?: ReactNode;
+}
+
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
   return (
@@ -15,7 +21,7 @@ const Modal = ({ isOpen, onClose, children }) => {
         </button>
         <div className="w-full h-full overflow-hidden">
           <iframe
-            src=""
+            src="https://0x-nextjs-demo-18962petc-0x-eng.vercel.app/"
             style={{ width: '100%', height: '100%', border: 'none', overflow: 'hidden' }}
             title="Coin Swap"
           ></iframe>
