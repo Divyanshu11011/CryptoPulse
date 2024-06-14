@@ -1,15 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { LineChart } from "./LineChart";
+import { LineChart, LineChartProps } from "./LineChart";
 
-const CryptoChart = ({ selectedCrypto, timeRange, setLivePriceAvailable, setCurrentPrice }) => {
-  const [livePrice, setLivePrice] = useState(null);
-  const [chartData, setChartData] = useState([]);
-  const socketRef = useRef(null);
+interface CryptoChartProps {
+  selectedCrypto: string;
+  timeRange: string;
+  setLivePriceAvailable: React.Dispatch<React.SetStateAction<boolean>>;
+  setCurrentPrice: React.Dispatch<React.SetStateAction<number | null>>;
+}
+
+
+const CryptoChart: React.FC<CryptoChartProps> = ({
+  selectedCrypto,
+  timeRange,
+  setLivePriceAvailable,
+  setCurrentPrice,
+}) => {
+  const [livePrice, setLivePrice] = useState<number | null>(null);
+  const [chartData, setChartData] = useState<{ timestamp: number; price: number }[]>([]);
+  const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    // Reset chart data when selectedCrypto changes
-    setChartData([]);
+    setChartData([]); // Reset chart data when selectedCrypto changes
     setLivePrice(null);
     setLivePriceAvailable(false); // Reset live price availability
 
@@ -21,7 +33,7 @@ const CryptoChart = ({ selectedCrypto, timeRange, setLivePriceAvailable, setCurr
             days: timeRange,
           },
         });
-        const data = response.data.prices.map((price) => ({
+        const data = response.data.prices.map((price: [number, number]) => ({
           timestamp: price[0],
           price: price[1],
         }));
@@ -48,15 +60,15 @@ const CryptoChart = ({ selectedCrypto, timeRange, setLivePriceAvailable, setCurr
         }
       };
 
-      const openWebSocket = (url) => {
+      const openWebSocket = (url: string) => {
         socketRef.current = new WebSocket(url);
 
         socketRef.current.onopen = () => {
           console.log("WebSocket connected");
         };
 
-        socketRef.current.onmessage = (event) => {
-          const data = JSON.parse(event.data);
+        socketRef.current.onmessage = (event: MessageEvent) => {
+          const data = JSON.parse(event.data) as Record<string, string>;
           if (data[selectedCrypto.toLowerCase()]) {
             const newPrice = parseFloat(data[selectedCrypto.toLowerCase()]);
             setLivePrice(newPrice);
@@ -91,14 +103,14 @@ const CryptoChart = ({ selectedCrypto, timeRange, setLivePriceAvailable, setCurr
     };
   }, [selectedCrypto, timeRange, setLivePriceAvailable, setCurrentPrice]);
 
-  const updateChartData = (newPrice) => {
-    setChartData(currentData => [
+  const updateChartData = (newPrice: number) => {
+    setChartData((currentData) => [
       ...currentData,
-      { timestamp: Date.now(), price: newPrice }
+      { timestamp: Date.now(), price: newPrice },
     ]);
   };
 
-  const formatDateOrTime = (timestamp) => {
+  const formatDateOrTime = (timestamp: number) => {
     const date = new Date(timestamp);
     if (timeRange === "1") {
       return date.toLocaleTimeString();
@@ -107,24 +119,27 @@ const CryptoChart = ({ selectedCrypto, timeRange, setLivePriceAvailable, setCurr
     }
   };
 
+  const lineChartProps: LineChartProps = {
+    data: chartData.map((item) => ({
+      date: formatDateOrTime(item.timestamp),
+      price: item.price,
+    })),
+    index: "date",
+    categories: ["price"],
+    valueFormatter: (tickValue) => `$${(tickValue as number).toFixed(2)}`,
+
+    yAxisWidth: 40,
+    startEndOnly: false,
+    connectNulls: false,
+    showLegend: false,
+    showTooltip: true,
+    xAxisLabel: timeRange === "1" ? "Time" : "Date",
+    livePrice: livePrice,
+  };
+
   return (
     <div className="w-full h-full">
-      <LineChart
-        data={chartData.map(item => ({
-          date: formatDateOrTime(item.timestamp),
-          price: item.price,
-        }))}
-        index="date"
-        categories={["price"]}
-        valueFormatter={(tickValue) => `$${tickValue.toFixed(2)}`}
-        yAxisWidth={40}
-        startEndOnly={false}
-        connectNulls={false}
-        showLegend={false}
-        showTooltip={true}
-        xAxisLabel={timeRange === "1" ? "Time" : "Date"}
-        livePrice={livePrice}
-      />
+      <LineChart {...lineChartProps} />
     </div>
   );
 };
