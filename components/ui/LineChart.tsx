@@ -19,7 +19,11 @@ interface LineChartProps {
   showLegend: boolean;
   showTooltip: boolean;
   xAxisLabel: string;
+  livePrice?: number | null;
+  
 }
+
+
 
 const LineChart: React.FC<LineChartProps> = ({
   data,
@@ -82,4 +86,4 @@ const LineChart: React.FC<LineChartProps> = ({
   );
 };
 
-export { LineChart };
+export { LineChart, type LineChartProps };
