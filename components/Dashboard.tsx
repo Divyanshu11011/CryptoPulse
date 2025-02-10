@@ -29,7 +29,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import CryptoChart from "@/components/ui/CryptoChart";
-import Modal from "@/components/ui/DrawerCoin";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -62,7 +61,6 @@ export function Dashboard() {
   const [fetchError, setFetchError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [historicalData, setHistoricalData] = useState<any[]>([]); // Adjust type according to your data structure
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchCryptos = async () => {
@@ -199,10 +197,11 @@ export function Dashboard() {
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col">
-              <nav className="grid gap-2 text-lg font-medium overflow-y-auto max-h-[calc(100vh-60px)] no-scrollbar">
+            <SheetContent side="left">
+              <div className="grid gap-2 text-lg font-medium overflow-y-auto max-h-[calc(100vh-60px)] no-scrollbar">
                 <Link
                   href="#"
+
                   className="flex items-center gap-2 text-lg font-semibold"
                 >
                   <Package2 className="h-6 w-6" />
@@ -227,11 +226,12 @@ export function Dashboard() {
                     {crypto.name}
                   </Link>
                 ))}
-              </nav>
+              </div>
             </SheetContent>
           </Sheet>
           <div className="w-full flex-1 relative">
             <form>
+              {/* searching crypto currencies */}
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -257,16 +257,6 @@ export function Dashboard() {
               </div>
             </form>
           </div>
-          <Button variant="outline" onClick={() => setIsModalOpen(true)}>
-            Coin Swap
-          </Button>
-          <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-            <iframe
-              src="https://coinmingle.vercel.app/"
-              style={{ width: "100%", height: "100%", border: "none" }}
-              title="Coin Swap"
-            ></iframe>
-          </Modal>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
